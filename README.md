@@ -17,7 +17,7 @@ This Galaxy workflow performs **de novo genome assembly, structural prediction, 
 HiFi reads (.bam)
       │
       ▼
-[1] PacBio bam2fastx        → Convert BAM to FASTQ
+[1] samtools                → Convert BAM to FASTQ
       │
       ▼
 [2] Hifiasm                 → De novo genome assembly (GFA format)
