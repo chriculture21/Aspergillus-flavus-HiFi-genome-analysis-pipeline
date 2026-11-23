@@ -1,14 +1,13 @@
-# Genome Assembly and Annotation of a non-toxigenic Strain of *Aspergillus flavus*
+# Genome Assembly and Annotation of an *Aspergillus flavus* toxigenic strain (BAF47) isolated from corn
 
 ## Overview
-
 This Galaxy workflow performs **de novo genome assembly, structural prediction, functional annotation, and secondary metabolite detection** for a non-toxigenic strain of *Aspergillus flavus* (strain AAF4) using PacBio HiFi long-read sequencing data. The workflow is fully automated and runs end-to-end from raw `.bam` input to a functionally annotated genome with biosynthetic gene cluster (BGC) predictions.
 
 ---
 
 ## Biological Context
 
-*Aspergillus flavus* is a filamentous fungus of major agricultural and public health significance, responsible for aflatoxin contamination in crops worldwide. This workflow was designed to characterize a non-toxigenic strain (AAF4) at the genomic level, enabling downstream analyses of secondary metabolite gene clusters.
+*Aspergillus flavus* is a filamentous fungus of major agricultural and public health significance, responsible for aflatoxin contamination in crops worldwide. This workflow was designed to characterize a toxigenic strain (BAF47) at the genomic level, enabling downstream analyses of secondary metabolite gene clusters.
 
 ---
 
