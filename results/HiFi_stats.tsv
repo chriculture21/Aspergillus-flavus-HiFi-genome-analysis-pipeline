@@ -1,0 +1,2 @@
+file                  format  type  num_seqs        sum_len  min_len   avg_len  max_len     Q1      Q2      Q3  sum_gap     N50  N50_num  Q20(%)  Q30(%)  AvgQual  GC(%)  sum_n
+BAF47_reads.fastq.gz  FASTQ   DNA    135,474  1,901,028,913      421  14,032.4   44,136  6,581  15,619  19,918        0  18,964   42,269   98.45   96.13     27.2  46.85      0
