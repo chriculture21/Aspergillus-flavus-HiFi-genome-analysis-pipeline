@@ -1,0 +1,15 @@
+# Sequence and data files: keep off the public repo
+*.fa
+*.fasta
+*.faa
+*.fna
+*.masked
+*.gz
+*.zip
+*.bam
+
+# Folders with large inputs and outputs
+reference/
+annotation/
+RM_*/
+*.log
