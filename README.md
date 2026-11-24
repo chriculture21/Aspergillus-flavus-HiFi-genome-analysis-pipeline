@@ -1,186 +1,205 @@
-# Genome Assembly and Annotation of an *Aspergillus flavus* toxigenic strain (BAF47) isolated from corn
+# Genome Assembly and Annotation of a Toxigenic *Aspergillus flavus* Strain (BAF47) Isolated from Corn
 
-## Overview
-This Galaxy workflow performs **de novo genome assembly, structural prediction, functional annotation, and secondary metabolite detection** for a non-toxigenic strain of *Aspergillus flavus* (strain AAF4) using PacBio HiFi long-read sequencing data. The workflow is fully automated and runs end-to-end from raw `.bam` input to a functionally annotated genome with biosynthetic gene cluster (BGC) predictions.
+This repository documents the genome assembly, quality control, repeat annotation and gene prediction of *Aspergillus flavus* strain **BAF47** from PacBio HiFi reads. It contains two versions of the analysis:
 
----
+1. **Command-line pipeline (main)**: step-by-step bash scripts run locally on Ubuntu (WSL2) with conda environments. This is the version described in detail below.
+2. **Galaxy workflow**: an end-to-end Galaxy workflow (`.ga` file) covering the same steps plus functional annotation. See [Galaxy workflow](#galaxy-workflow).
 
-## Biological Context
-
-*Aspergillus flavus* is a filamentous fungus of major agricultural and public health significance, responsible for aflatoxin contamination in crops worldwide. This workflow was designed to characterize a toxigenic strain (BAF47) at the genomic level, enabling downstream analyses of secondary metabolite gene clusters.
+Only scripts and small result tables are stored here. Raw reads, assemblies and other large files are excluded (see `.gitignore`).
 
 ---
 
-## Workflow Summary
+## Biological context
+
+*Aspergillus flavus* is a filamentous fungus of major agricultural and public health importance, responsible for aflatoxin contamination of crops worldwide. A high-quality, chromosome-level genome of a toxigenic strain from corn provides the basis for studying its secondary metabolite gene clusters, including the aflatoxin cluster, and for comparisons with non-toxigenic strains.
+
+---
+
+## Key results
+
+| | BAF47 |
+|---|---|
+| **Sequencing** | PacBio Revio HiFi: 135,474 reads, 1.90 Gb, ~50× coverage |
+| **Read length N50** | 19.0 kb |
+| **Read quality** | Median Q35.5; 96.8% of reads ≥ Q20 |
+| **Nuclear assembly** | 8 contigs, 37,755,576 bp, no gaps |
+| **Telomere-to-telomere** | 7 of 8 chromosomes (telomeric repeat `TTAGGGTCAACA` at both ends) |
+| **Mitochondrial genome** | Identified and separated from the nuclear assembly |
+| **BUSCO (genome)** | 98.3% complete (`eurotiomycetes_odb12`) |
+| **Repeats** | 1.66% of the genome masked; transposable elements 0.82%, mostly LTR/Gypsy |
+| **Gene prediction** | *In progress* (funannotate) |
+
+---
+
+## Pipeline overview
 
 ```
-HiFi reads (.bam)
+PacBio HiFi reads (.bam)
+      │
+      ├──► [1] Read QC ............................ NanoPlot, seqkit stats
       │
       ▼
-[1] samtools                → Convert BAM to FASTQ
+[2] De novo assembly .............................. hifiasm
       │
       ▼
-[2] Hifiasm                 → De novo genome assembly (GFA format)
+[3] Assembly QC and cleaning
+      ├── contig length, depth and GC .............. awk, seqkit
+      ├── mitochondrial / repeat contigs ........... minimap2 vs. reference
+      ├── telomere detection ....................... seqkit subseq + locate
+      └── completeness ............................. BUSCO (genome mode)
       │
       ▼
-[3] GFA to FASTA            → Convert primary contig graph to FASTA
+   Nuclear assembly (8 chromosomes)
       │
-      ├──────────────────────────────────────┐
-      ▼                                      ▼
-[4] BUSCO (genome mode)             [5] RepeatModeler
-    Assembly quality assessment         Build repeat library
-                                               │
-                                               ▼
-                                        [6] RepeatMasker
-                                            Mask repeats in assembly
-                                               │
-      mRNA/ESTs (FASTA) ────────────────────► │
-                                               ▼
-                                        [7] Funannotate predict
-                                            Structural gene prediction
-                                               │
-                          ┌────────────────────┼──────────────────┐
-                          ▼                    ▼                   ▼
-                   [8] InterProScan    [9] eggNOG Mapper    [10] antiSMASH
-                   Protein domain          Orthology &         Secondary
-                   annotation              GO annotation       metabolite BGCs
-                          │                    │
-                          └────────┬───────────┘
-                                   ▼
-                          [11] Funannotate functional
-                               Final functional annotation
-                                   │
-                                   ▼
-                          [12] BUSCO (protein mode)
-                               Annotation completeness
+      ▼
+[4] Repeat annotation
+      ├── de novo repeat library ................... RepeatModeler (Galaxy)
+      └── soft-masking ............................. RepeatMasker -xsmall
+      │
+      ▼
+[5] Gene prediction ............................... funannotate predict
+      ├── protein evidence: A. flavus NRRL 3357 + Swiss-Prot (DIAMOND + Exonerate)
+      ├── ab initio: Augustus, SNAP, GlimmerHMM (trained on BUSCO genes)
+      └── consensus: EVidenceModeler
+      │
+      ▼
+[6] Annotation QC (planned) ....................... BUSCO (protein mode), gene statistics
+      │
+      ▼
+[7] Functional annotation (planned) ............... funannotate annotate, InterProScan,
+                                                    eggNOG-mapper, antiSMASH
 ```
 
 ---
 
-## Tools and Versions
+## Step details
 
-| Step | Tool | Version | Purpose |
-|------|------|---------|---------|
-| 1 | PacBio bam2fastx | 3.5.0+galaxy0 | Convert PacBio BAM to FASTQ |
-| 2 | Hifiasm | 0.25.0+galaxy1 | De novo HiFi genome assembly |
-| 3 | GFA to FASTA | 0.1.2 | Convert assembly graph to FASTA |
-| 4 | BUSCO | 5.8.0+galaxy2 | Genome assembly completeness |
-| 5 | RepeatModeler | 2.0.5+galaxy0 | De novo repeat library construction |
-| 6 | RepeatMasker | 4.1.5+galaxy0 | Repeat masking of genome |
-| 7 | Funannotate predict | 1.8.17+galaxy0 | Structural gene prediction |
-| 8 | InterProScan | 5.59-91.0+galaxy3 | Protein domain & GO annotation |
-| 9 | eggNOG Mapper | 2.1.13+galaxy0 | Orthology & functional annotation |
-| 10 | antiSMASH | 6.1.1+galaxy1 | Biosynthetic gene cluster detection |
-| 11 | Funannotate functional | 1.8.17+galaxy5 | Final functional annotation integration |
-| 12 | BUSCO | 5.8.0+galaxy2 | Protein annotation completeness |
+### 1. Read quality control
+NanoPlot was run on the unaligned HiFi BAM to summarise read length and quality distributions.
 
----
+```bash
+NanoPlot --ubam BAF47_reads.bam -t 2 -o NanoPlot_BAF47 -p BAF47_ --N50 \
+  --title "A. flavus BAF47 HiFi reads"
+```
 
-## Input Files
+### 2. Genome assembly
+Reads were assembled with hifiasm. The primary contig graph (`*.bp.p_ctg.gfa`) was converted to FASTA, and per-contig length and read depth were taken from the GFA segment (`S`) lines.
 
-| Input | Format | Description |
-|-------|--------|-------------|
-| `AAF4_mix.hifi_reads.bam` | BAM | PacBio HiFi reads for strain AAF4 |
-| `mRNA_ESTs_Aflavus for prediction.fasta` | FASTA | *A. flavus* mRNA/EST sequences used as transcript evidence for gene prediction |
+### 3. Assembly QC and cleaning
+- **Contig table:** length, read depth and GC content per contig, combined into one table with `awk`.
+- **Mitochondrial genome:** identified by high depth, low GC and circularity, and saved separately.
+- **Extra contigs:** small contigs were aligned to the main assembly with `minimap2 -x asm5`. Those fully contained in it (repeat copies) were removed, leaving 8 nuclear contigs.
+- **Telomeres:** the first and last 2 kb of each contig were searched for the *Aspergillus* telomeric repeat `TTAGGGTCAACA`. 7 of 8 contigs carry telomeres at both ends.
+- **BUSCO:** genome mode with the `eurotiomycetes_odb12` lineage.
 
----
+### 4. Repeat annotation
+A de novo repeat library was built with RepeatModeler (run on Galaxy because of its compute demands). The nuclear assembly was then soft-masked locally:
 
-## Output Files
+```bash
+RepeatMasker -lib BAF47-families.fasta -xsmall -gff -pa 4 -dir masking BAF47.nuclear.fa
+```
 
-| Output | Format | Source Tool | Description |
-|--------|--------|-------------|-------------|
-| Assembly FASTA | FASTA | GFA to FASTA | Primary contig assembly |
-| BUSCO summary (genome) | TXT | BUSCO | Assembly completeness report |
-| Masked genome | FASTA | RepeatMasker | Repeat-masked assembly |
-| Repeat catalog | TXT | RepeatMasker | Identified repeat elements |
-| Predicted annotation | GenBank | Funannotate predict | Structural gene models |
-| Predicted proteins | FASTA | Funannotate predict | Predicted protein sequences |
-| InterProScan results | TSV / XML | InterProScan | Domain and GO annotations |
-| eggNOG annotations | Tabular | eggNOG Mapper | Ortholog and COG assignments |
-| antiSMASH results | GenBank / HTML | antiSMASH | Biosynthetic gene cluster predictions |
-| Final annotation | GenBank / GFF3 / FASTA | Funannotate functional | Complete annotated genome |
-| BUSCO summary (proteins) | TXT | BUSCO | Annotation completeness report |
+`-xsmall` writes repeats in lowercase (soft-masking), so gene predictors can still read them but avoid starting genes inside transposons.
 
----
+### 5. Gene prediction
+No RNA-seq data were available, so gene prediction used protein evidence and ab initio predictors trained on BUSCO genes.
 
-## Key Tool Parameters
+```bash
+funannotate setup -d $FUNANNOTATE_DB -i uniprot busco repeats -b eurotiomycetes
 
-### Hifiasm
-- Mode: Standard HiFi assembly
-- Filter bits: 37
+funannotate predict \
+  -i BAF47.nuclear.fa.masked \
+  -o funannotate_BAF47 \
+  -s "Aspergillus flavus" --strain BAF47 --name BAF47_ \
+  --busco_db eurotiomycetes \
+  --busco_seed_species aspergillus_oryzae \
+  --protein_evidence GCF_009017415.1_protein.faa $FUNANNOTATE_DB/uniprot_sprot.fasta \
+  --cpus 8
+```
 
-### BUSCO
-- Lineage: `eurotiomycetes_odb10` (appropriate for *Aspergillus*)
-- Genome mode: Augustus-based gene prediction
-- Protein mode: Direct protein assessment
-
-### Funannotate predict
-- Organism: *Aspergillus flavus*, strain AAF4
-- Protein evidence: UniProt
-- BUSCO seed species: *Aspergillus nidulans*
-- Min protein length: 50 aa
-- Max intron length: 3,000 bp
-- Gene prefix: `AfAAF4_`
-
-### InterProScan
-- Databases: Pfam, TIGRFAM, PANTHER, SMART, CDD, Gene3D, SUPERFAMILY, PRINTS, Hamap, PIRSF, MobiDBLite, Coils, FunFam, SFLD, PIRSR, PrositeProfiles, PrositePatterns, AntiFam
-- GO terms: enabled
-- Pathway mapping: enabled
-
-### antiSMASH
-- Taxon: Fungi
-- Gene finding: GlimmerHMM
-- ClusterBlast: enabled (general, known clusters, subclusters)
-- MIBiG comparison: enabled
-- RRE detection: enabled
-- smCOG trees: enabled
-- Minimum cluster length: 1,000 bp
+- **Protein evidence:** the reference proteome of *A. flavus* NRRL 3357 (RefSeq GCF_009017415.1, 13,707 proteins) and UniProt Swiss-Prot.
+- **BUSCO seed species:** *A. oryzae*, the closest relative of *A. flavus* among the pre-trained Augustus models.
+- **GeneMark** was not used (separate licence).
 
 ---
 
-## How to Import and Run This Workflow
+## Repository structure
 
-### Option A — Import from Galaxy interface
-1. Log in to your Galaxy instance (e.g., [usegalaxy.eu](https://usegalaxy.eu))
-2. Go to **Workflow** → **Import**
-3. Upload the `.ga` file or paste the raw GitHub URL of the file
-4. Click **Import workflow**
-
-### Option B — Import via URL (from GitHub)
-1. Navigate to the `.ga` file on GitHub
-2. Click **Raw** and copy the URL
-3. In Galaxy: **Workflow** → **Import** → paste the raw URL
-
-### Running the workflow
-1. Upload your input files to Galaxy history
-2. Open the imported workflow and click **Run**
-3. Assign:
-   - `AAF4_mix.hifi_reads.bam` → your PacBio HiFi BAM file
-   - `mRNA_ESTs_Aflavus for prediction.fasta` → your transcript evidence FASTA
-4. Click **Run Workflow**
+```
+.
+├── README.md
+├── LICENSE
+├── *.ga                      # Galaxy workflow
+├── scripts/                  # bash scripts for each step
+│   ├── Quality_control.sh
+│   ├── Annotation.sh
+│   └── ...
+└── results/                  # small result tables (TSV/TXT)
+    ├── QC/                   # NanoPlot read statistics
+    ├── Busco/                # BUSCO summaries
+    ├── Repeats/              # RepeatMasker summary (.tbl, .out)
+    └── Annotation/           # gene prediction summaries
+```
 
 ---
 
-## Citation
+## Software
 
-If you use this workflow, please cite the following tools:
+| Tool | Version | Purpose |
+|------|---------|---------|
+| NanoPlot | ? | Read QC |
+| seqkit | ? | Sequence statistics, subsequences, motif search |
+| hifiasm | ? | De novo HiFi assembly |
+| minimap2 | ? | Contig-to-assembly alignment |
+| BUSCO | ? | Assembly completeness |
+| RepeatModeler | 2.0.5 (Galaxy) | De novo repeat library |
+| RepeatMasker | ? | Soft-masking |
+| funannotate | 1.8.17 | Gene prediction pipeline |
+| Augustus | 3.5.0 | Ab initio gene prediction |
+| SNAP | 2006-07-28 | Ab initio gene prediction |
+| GlimmerHMM | 3.0.4 | Ab initio gene prediction |
+| DIAMOND | 2.2.8 | Fast protein-to-genome search |
+| Exonerate | 2.4.0 | Spliced protein alignment |
+| tRNAscan-SE | 2.0.13 | tRNA prediction |
 
-- **Hifiasm**: Cheng et al. (2021) *Nature Methods* 18:170–175
+All tools were installed with conda (channels: conda-forge, bioconda) on Ubuntu 24.04 (WSL2).
+
+---
+
+## Galaxy workflow
+
+The `.ga` file in this repository is a Galaxy workflow that runs the full analysis end-to-end, from the raw `.bam` file to a functionally annotated genome with biosynthetic gene cluster predictions: BAM to FASTQ → hifiasm → GFA to FASTA → BUSCO → RepeatModeler → RepeatMasker → funannotate predict → InterProScan / eggNOG-mapper / antiSMASH → funannotate annotate → BUSCO (protein mode).
+
+**To import it:**
+1. Log in to a Galaxy server (e.g. [usegalaxy.eu](https://usegalaxy.eu)).
+2. Go to **Workflows → Import**.
+3. Upload the `.ga` file, or paste the raw GitHub URL of the file (open the file on GitHub, click **Raw**, copy the URL).
+4. Click **Import workflow**.
+
+**To run it:** upload your HiFi BAM file and an *A. flavus* mRNA/EST FASTA (transcript evidence) to your history, open the workflow, assign the two inputs, and click **Run Workflow**.
+
+---
+
+## Citations
+
+- **NanoPlot**: De Coster & Rademakers (2023) *Bioinformatics* 39(5):btad311
+- **SeqKit**: Shen et al. (2016) *PLoS ONE* 11(10):e0163962
+- **hifiasm**: Cheng et al. (2021) *Nature Methods* 18:170–175
+- **minimap2**: Li (2018) *Bioinformatics* 34(18):3094–3100
 - **BUSCO**: Manni et al. (2021) *Molecular Biology and Evolution* 38(10):4647–4654
-- **RepeatModeler/RepeatMasker**: Flynn et al. (2020) *PNAS* 117(17):9451–9457
-- **Funannotate**: Palmer & Stajich (2020) *Zenodo* https://doi.org/10.5281/zenodo.4054262
-- **InterProScan**: Jones et al. (2014) *Bioinformatics* 30(9):1236–1240
-- **eggNOG Mapper**: Cantalapiedra et al. (2021) *Molecular Biology and Evolution* 38(12):5825–5829
-- **antiSMASH**: Blin et al. (2021) *Nucleic Acids Research* 49(W1):W29–W35
+- **RepeatModeler2**: Flynn et al. (2020) *PNAS* 117(17):9451–9457
+- **funannotate**: Palmer & Stajich (2020) Zenodo, https://doi.org/10.5281/zenodo.4054262
+- **AUGUSTUS**: Stanke et al. (2006) *Nucleic Acids Research* 34:W435–W439
+- **EVidenceModeler**: Haas et al. (2008) *Genome Biology* 9:R7
+- **DIAMOND**: Buchfink et al. (2021) *Nature Methods* 18:366–368
+- **Exonerate**: Slater & Birney (2005) *BMC Bioinformatics* 6:31
 
 ---
 
 ## Contact
 
-For questions about this workflow, please open an issue in this repository.
-
----
+For questions, please open an issue in this repository.
 
 ## License
 
-This workflow is released under the [MIT License](LICENSE).
+Released under the [MIT License](LICENSE).
