@@ -48,3 +48,12 @@ funannotate predict \
 	--protein_evidence reference/A_flavus_ref/ncbi_dataset/data/GCF_009017415.1/protein.faa $FUNANNOTATE_DB/uniprot_sprot.fasta \
 	--cpus 8
 	
+#After running the prediction, we do a BUSCO analysis on protein mode
+busco \
+	-i annotation/funannotate_BAF47/predict_results/Aspergillus_flavus_BAF47.proteins.fa \
+	-m proteins \
+	-l eurotiomycetes_odb12.2 \
+	-c 8 \
+	-o busco_BAF47_proteins \
+	--out_path annotation \
+	--download_path ~/busco_downloads
