@@ -22,12 +22,21 @@ RepeatMasker -lib BAF47-families.fa -xsmall -gff -pa 4 -dir masking BAF47.nuclea
 #observe the table with the results
 cat BAF47.nuclear.fa.tbl
 
+#download the protein evidence of the reference genome
 mkdir reference
 cd reference
 conda activate fg-core #this env contains the datasets
 datasets download genome taxon "Aspergillus flavus" --reference --include protein --filename A_flavus_ref.zip
 
-#Now, we need to predict  annotate our masked genome. 
+conda activate funannotate
+#the databases need to be downloaded first, if they are not do so:
+conda env config vars set FUNANNOTATE_DB=$HOME/funannotate_db
+conda deactivate
+conda activate funannotate
+funannotate setup -d $FUNANNOTATE_DB -i uniprot busco repeats -b eurotiomycetes
+funannotate database
+
+#Now, we need to predict  annotate our masked genome using the reference and the downloaded protein files. 
 funannotate predict \
 	-i results/Repeats/masking/BAF47.nuclear.fa.masked \
 	-o results/Annotation/funannotate_BAF47 \
