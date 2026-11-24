@@ -147,13 +147,13 @@ funannotate predict \
 
 | Tool | Version | Purpose |
 |------|---------|---------|
-| NanoPlot | ? | Read QC |
-| seqkit | ? | Sequence statistics, subsequences, motif search |
-| hifiasm | ? | De novo HiFi assembly |
-| minimap2 | ? | Contig-to-assembly alignment |
-| BUSCO | ? | Assembly completeness |
+| NanoPlot | 1.48.0 | Read QC |
+| seqkit | 2.14.0 | Sequence statistics, subsequences, motif search |
+| hifiasm | 0.25.0-r726 | De novo HiFi assembly |
+| minimap2 | 2.26-r1175 | Contig-to-assembly alignment |
+| BUSCO | 6.1.0 | Assembly completeness |
 | RepeatModeler | 2.0.5 (Galaxy) | De novo repeat library |
-| RepeatMasker | ? | Soft-masking |
+| RepeatMasker | 4.2.4 | Soft-masking |
 | funannotate | 1.8.17 | Gene prediction pipeline |
 | Augustus | 3.5.0 | Ab initio gene prediction |
 | SNAP | 2006-07-28 | Ab initio gene prediction |
