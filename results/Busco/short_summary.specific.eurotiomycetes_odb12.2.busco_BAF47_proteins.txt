@@ -1,0 +1,17 @@
+# BUSCO version is: 6.1.0 
+# The lineage dataset is: eurotiomycetes_odb12.2 (Creation date: 2026-05-13, number of genomes: 71, number of BUSCOs: 3424)
+# Summarized benchmarking in BUSCO notation for file /home/chriculture21/Aspergillus-flavus-HiFi-genome-analysis-pipeline/annotation/funannotate_BAF47/predict_results/Aspergillus_flavus_BAF47.proteins.fa
+# BUSCO was run in mode: proteins
+
+	***** Results: *****
+
+	C:98.5%[S:97.7%,D:0.7%],F:0.2%,M:1.4%,n:3424	   
+	3371	Complete BUSCOs (C)			   
+	3346	Complete and single-copy BUSCOs (S)	   
+	25	Complete and duplicated BUSCOs (D)	   
+	6	Fragmented BUSCOs (F)			   
+	47	Missing BUSCOs (M)			   
+	3424	Total BUSCO groups searched		   
+
+Dependencies and versions:
+	hmmsearch: 3.4
