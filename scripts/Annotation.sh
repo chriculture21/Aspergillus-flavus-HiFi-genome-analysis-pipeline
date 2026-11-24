@@ -21,3 +21,21 @@ RepeatMasker -lib BAF47-families.fa -xsmall -gff -pa 4 -dir masking BAF47.nuclea
 
 #observe the table with the results
 cat BAF47.nuclear.fa.tbl
+
+mkdir reference
+cd reference
+conda activate fg-core #this env contains the datasets
+datasets download genome taxon "Aspergillus flavus" --reference --include protein --filename A_flavus_ref.zip
+
+#Now, we need to predict  annotate our masked genome. 
+funannotate predict \
+	-i results/Repeats/masking/BAF47.nuclear.fa.masked \
+	-o results/Annotation/funannotate_BAF47 \
+	-s "Aspergillus flavus" \
+	--strain BAF47 \
+	--name BAF47_ \
+	--busco_db eurotiomycetes \
+	--busco_seed_species aspergillus_oryzae \
+	--protein_evidence reference/A_flavus_ref/ncbi_dataset/data/GCF_009017415.1/protein.faa $FUNANNOTATE_DB/uniprot_sprot.fasta \
+	--cpus 8
+	
