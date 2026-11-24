@@ -27,7 +27,7 @@ Only scripts and small result tables are stored here. Raw reads, assemblies and 
 | **Mitochondrial genome** | Identified and separated from the nuclear assembly |
 | **BUSCO (genome)** | 98.3% complete (`eurotiomycetes_odb12`) |
 | **Repeats** | 1.66% of the genome masked; transposable elements 0.82%, mostly LTR/Gypsy |
-| **Gene prediction** | *In progress* (funannotate) |
+| **Gene prediction** | funannotate |
 
 ---
 
@@ -102,7 +102,7 @@ RepeatMasker -lib BAF47-families.fasta -xsmall -gff -pa 4 -dir masking BAF47.nuc
 `-xsmall` writes repeats in lowercase (soft-masking), so gene predictors can still read them but avoid starting genes inside transposons.
 
 ### 5. Gene prediction
-No RNA-seq data were available, so gene prediction used protein evidence and ab initio predictors trained on BUSCO genes.
+Gene prediction used protein evidence and ab initio predictors trained on BUSCO genes.
 
 ```bash
 funannotate setup -d $FUNANNOTATE_DB -i uniprot busco repeats -b eurotiomycetes
