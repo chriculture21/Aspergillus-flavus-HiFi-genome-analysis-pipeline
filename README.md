@@ -28,6 +28,7 @@ Only scripts and small result tables are stored here. Raw reads, assemblies and 
 | **BUSCO (genome)** | 98.3% complete (`eurotiomycetes_odb12`) |
 | **Repeats** | 1.66% of the genome masked; transposable elements 0.82%, mostly LTR/Gypsy |
 | **Gene prediction** | funannotate |
+| **Genome visualization** | karyoploteR | 
 
 ---
 
@@ -63,10 +64,10 @@ PacBio HiFi reads (.bam)
       └── consensus: EVidenceModeler
       │
       ▼
-[6] Annotation QC (planned) ....................... BUSCO (protein mode), gene statistics
+[6] Annotation QC ....................... BUSCO (protein mode), gene statistics
       │
       ▼
-[7] Functional annotation (planned) ............... funannotate annotate, InterProScan,
+[7] Functional annotation ............... funannotate annotate, InterProScan,
                                                     eggNOG-mapper, antiSMASH
 ```
 
@@ -83,7 +84,7 @@ NanoPlot --ubam BAF47_reads.bam -t 2 -o NanoPlot_BAF47 -p BAF47_ --N50 \
 ```
 
 ### 2. Genome assembly
-Reads were assembled with hifiasm. The primary contig graph (`*.bp.p_ctg.gfa`) was converted to FASTA, and per-contig length and read depth were taken from the GFA segment (`S`) lines.
+Reads were assembled with the tool hifiasm. The primary contig graph (`*.bp.p_ctg.gfa`) was converted to FASTA, and per-contig length and read depth were taken from the GFA segment (`S`) lines.
 
 ### 3. Assembly QC and cleaning
 - **Contig table:** length, read depth and GC content per contig, combined into one table with `awk`.
@@ -161,6 +162,7 @@ funannotate predict \
 | DIAMOND | 2.2.8 | Fast protein-to-genome search |
 | Exonerate | 2.4.0 | Spliced protein alignment |
 | tRNAscan-SE | 2.0.13 | tRNA prediction |
+| karyploteR | 1.32.0 | Genome visualization |
 
 All tools were installed with conda (channels: conda-forge, bioconda) on Ubuntu 24.04 (WSL2).
 
