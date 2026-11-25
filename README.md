@@ -162,7 +162,7 @@ funannotate predict \
 | DIAMOND | 2.2.8 | Fast protein-to-genome search |
 | Exonerate | 2.4.0 | Spliced protein alignment |
 | tRNAscan-SE | 2.0.13 | tRNA prediction |
-| karyploteR | 1.32.0 | Genome visualization |
+| karyoploteR | 1.32.0 | Genome visualization |
 
 All tools were installed with conda (channels: conda-forge, bioconda) on Ubuntu 24.04 (WSL2).
 
