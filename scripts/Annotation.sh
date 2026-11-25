@@ -57,3 +57,16 @@ busco \
 	-o busco_BAF47_proteins \
 	--out_path annotation \
 	--download_path ~/busco_downloads
+
+#Run InterProScan, AntiSMASH (fungi) and eggNOG either locally or online (for example Galaxy if you don't have space) and then funannotate
+conda activate funannotate
+
+funannotate annotate \
+	-i annotation/funannotate_BAF47 \
+	--eggnog annotation/eggNOG/eggNOG_Mapper_BAF47.tabular \
+	--iprscan annotation/interproscan/BAF47.interproscan.xml \
+	--antismash annotation/AntiSmash_Fungi/Antishmash_A_flavus/Aspergillus_flavus_BAF47.gbk \
+	--busco_db eurotiomycetes \
+	--cpus 8
+
+#As input, enter the tsv file from eggNOG, the xml file from InterProScan and the genbank file from AntiSMASH (fungi)
